@@ -59,9 +59,9 @@ def init_db(database_url: str = None, **engine_kwargs):
             For any other error during database initialization.
 
     Example:
-        >>> init_db()
-        >>> from framework.db import SessionLocal
-        >>> session = SessionLocal()
+        init_db()
+        from framework.db import SessionLocal
+        session = SessionLocal()
     """
     global SessionLocal, engine
 
@@ -120,7 +120,10 @@ def init_db(database_url: str = None, **engine_kwargs):
             autoflush=False,
             bind=engine
         )
-        logger.info("Database initialized successfully")
+        import models.enphase
+        Base.metadata.create_all(engine)
+
+        logger.info("Database initialized and tables created successfully")
 
     except Exception as e:
         logger.error(f"Failed to initialize database: {str(e)}")
@@ -143,8 +146,8 @@ def get_db():
             If the database has not been initialized via `init_db()`.
 
     Example:
-        >>> from fastapi import Depends
-        >>> @app.get("/items/")
+        from fastapi import Depends
+        @app.get("/items/")
         ... def read_items(db: Session = Depends(get_db)):
         ...     return db.query(Item).all()
     """

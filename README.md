@@ -36,7 +36,7 @@ http://home.dev.com/api/v1/enphase/docs
 ```bash
 CREATE TABLE enphase (
     id SERIAL PRIMARY KEY,
-    system_id INTEGER UNIQUE NOT NULL,
+    system_id INTEGER NOT NULL,
     current_power INTEGER NOT NULL,
     energy_lifetime BIGINT NOT NULL,
     energy_today INTEGER NOT NULL,
@@ -54,5 +54,7 @@ CREATE TABLE enphase (
 );
 
 -- Optional: Index for faster lookups by system_id
-CREATE UNIQUE INDEX idx_enphase_system_id ON enphase(system_id);
+CREATE UNIQUE INDEX idx_enphase_create_date ON enphase(create_date);
+CREATE UNIQUE INDEX idx_enphase_last_report_at ON enphase(last_report_at);
+
 ```

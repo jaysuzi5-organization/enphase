@@ -39,12 +39,12 @@ class Enphase(Base):
     __tablename__ = "enphase"
 
     id = Column(Integer, primary_key=True, index=True)
-    system_id = Column(Integer, unique=True, nullable=False, index=True)
+    system_id = Column(Integer, nullable=False)
     current_power = Column(Integer, nullable=False)
     energy_lifetime = Column(Integer, nullable=False)
     energy_today = Column(Integer, nullable=False)
     last_interval_end_at = Column(Integer, nullable=False)
-    last_report_at = Column(Integer, nullable=False)
+    last_report_at = Column(Integer, nullable=False, index=True)
     modules = Column(Integer, nullable=False)
     operational_at = Column(Integer, nullable=False)
     size_w = Column(Integer, nullable=False)
@@ -52,7 +52,7 @@ class Enphase(Base):
     summary_date = Column(String(10), nullable=False)
     events = Column(String, nullable=True)
     alarms = Column(String, nullable=True)
-    create_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    create_date = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     update_date = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
