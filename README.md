@@ -30,3 +30,29 @@ http://home.dev.com/enphase/test/enphase.html
 
 ### Swagger:
 http://home.dev.com/api/v1/enphase/docs
+
+
+### Table was created manually with:
+```bash
+CREATE TABLE enphase (
+    id SERIAL PRIMARY KEY,
+    system_id INTEGER UNIQUE NOT NULL,
+    current_power INTEGER NOT NULL,
+    energy_lifetime BIGINT NOT NULL,
+    energy_today INTEGER NOT NULL,
+    last_interval_end_at BIGINT NOT NULL,
+    last_report_at BIGINT NOT NULL,
+    modules INTEGER NOT NULL,
+    operational_at BIGINT NOT NULL,
+    size_w INTEGER NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    summary_date DATE NOT NULL,
+    events TEXT,
+    alarms TEXT,
+    create_date TIMESTAMPTZ DEFAULT now() NOT NULL,
+    update_date TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- Optional: Index for faster lookups by system_id
+CREATE UNIQUE INDEX idx_enphase_system_id ON enphase(system_id);
+```

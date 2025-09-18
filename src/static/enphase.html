@@ -1,32 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>enphase Test Page</title>
+  <title>Enphase Test Page</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>enphase Management</h1>
+  <h1>Enphase Management</h1>
 
-  <h2>Add enphase</h2>
+  <h2>Add Enphase</h2>
   <form id="enphaseForm" autocomplete="off">
     <label>
-      User Name:
-      <input type="text" id="username" required>
+      System ID:
+      <input type="number" id="system_id" required>
     </label>
     <label>
-      Full Name:
-      <input type="text" id="full_name" required>
+      Current Power (W):
+      <input type="number" id="current_power" required>
     </label>
     <label>
-      Email:
-      <input type="email" id="email" required>
+      Energy Lifetime (Wh):
+      <input type="number" id="energy_lifetime" required>
+    </label>
+    <label>
+      Energy Today (Wh):
+      <input type="number" id="energy_today" required>
+    </label>
+    <label>
+      Last Interval End (Unix Timestamp):
+      <input type="number" id="last_interval_end_at" required>
+    </label>
+    <label>
+      Last Report At (Unix Timestamp):
+      <input type="number" id="last_report_at" required>
+    </label>
+    <label>
+      Modules:
+      <input type="number" id="modules" required>
+    </label>
+    <label>
+      Operational At (Unix Timestamp):
+      <input type="number" id="operational_at" required>
+    </label>
+    <label>
+      System Size (W):
+      <input type="number" id="size_w" required>
+    </label>
+    <label>
+      Status:
+      <input type="text" id="status" required>
+    </label>
+    <label>
+      Summary Date:
+      <input type="date" id="summary_date" required>
+    </label>
+    <label>
+      Events:
+      <input type="text" id="events">
+    </label>
+    <label>
+      Alarms:
+      <input type="text" id="alarms">
     </label>
     <button type="submit">Add</button>
   </form>
   <div id="responseMessage"></div>
 
-  <h2>enphase List</h2>
-
+  <h2>Enphase List</h2>
   <div id="paginationControls" aria-label="Pagination controls">
     <button id="prevPage" disabled>Previous</button>
     <span>Page <span id="currentPage">1</span></span>
@@ -42,9 +81,26 @@
     </select>
   </div>
 
-  <table id="enphaseTable" aria-label="enphase list table">
+  <table id="enphaseTable" aria-label="Enphase list table">
     <thead>
-      <tr><th>ID</th><th>enphase Name</th><th>Email</th><th>Full Name</th><th>Create Date</th><th>Update Date</th></tr>
+      <tr>
+        <th>ID</th>
+        <th>System ID</th>
+        <th>Current Power</th>
+        <th>Energy Lifetime</th>
+        <th>Energy Today</th>
+        <th>Last Interval End</th>
+        <th>Last Report At</th>
+        <th>Modules</th>
+        <th>Operational At</th>
+        <th>Size (W)</th>
+        <th>Status</th>
+        <th>Summary Date</th>
+        <th>Events</th>
+        <th>Alarms</th>
+        <th>Create Date</th>
+        <th>Update Date</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -60,7 +116,6 @@
 
     let currentPage = 1;
 
-    // Always read pageSize dynamically before load_enphase
     function getPageSize() {
       return Number(pageSizeSelect.value);
     }
@@ -73,15 +128,12 @@
 
       try {
         const res = await fetch(`${apiBase}?page=${page}&limit=${pageSize}`);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
 
         tbody.innerHTML = '';
 
         if (data.length === 0 && page > 1) {
-          // No data on requested page - go back one page and reload
           currentPage = page - 1;
           updatePaginationButtons();
           load_enphase(currentPage);
@@ -92,9 +144,19 @@
           tbody.innerHTML += `
             <tr>
               <td>${enphase.id}</td>
-              <td>${enphase.username}</td>
-              <td>${enphase.email}</td>
-              <td>${enphase.full_name ?? ''}</td>
+              <td>${enphase.system_id}</td>
+              <td>${enphase.current_power}</td>
+              <td>${enphase.energy_lifetime}</td>
+              <td>${enphase.energy_today}</td>
+              <td>${enphase.last_interval_end_at}</td>
+              <td>${enphase.last_report_at}</td>
+              <td>${enphase.modules}</td>
+              <td>${enphase.operational_at}</td>
+              <td>${enphase.size_w}</td>
+              <td>${enphase.status}</td>
+              <td>${enphase.summary_date}</td>
+              <td>${enphase.events ?? ''}</td>
+              <td>${enphase.alarms ?? ''}</td>
               <td>${enphase.create_date ? new Date(enphase.create_date).toLocaleString() : ''}</td>
               <td>${enphase.update_date ? new Date(enphase.update_date).toLocaleString() : ''}</td>
             </tr>
@@ -113,54 +175,47 @@
 
     function updatePaginationButtons() {
       prevPageBtn.disabled = currentPage <= 1;
-      // Next button is always enabled as before
     }
 
-    // Prev button handler
-    prevPageBtn.addEventListener('click', () => {
-      if (currentPage > 1) {
-        load_enphase(currentPage - 1);
-      }
-    });
-
-    // Next button handler
-    nextPageBtn.addEventListener('click', () => {
-      load_enphase(currentPage + 1);
-    });
-
-    pageSizeSelect.addEventListener('change', () => {
-      currentPage = 1;  // reset to first page on page size change
-      load_enphase(currentPage);
-    });
+    prevPageBtn.addEventListener('click', () => load_enphase(currentPage - 1));
+    nextPageBtn.addEventListener('click', () => load_enphase(currentPage + 1));
+    pageSizeSelect.addEventListener('change', () => { currentPage = 1; load_enphase(currentPage); });
 
     document.getElementById('enphaseForm').addEventListener('submit', e => {
       e.preventDefault();
       responseMessage.textContent = '';
       responseMessage.className = '';
 
-      const username = document.getElementById('username').value.trim();
-      const full_name = document.getElementById('full_name').value.trim();
-      const email = document.getElementById('email').value.trim();
+      const payload = {
+        system_id: Number(document.getElementById('system_id').value),
+        current_power: Number(document.getElementById('current_power').value),
+        energy_lifetime: Number(document.getElementById('energy_lifetime').value),
+        energy_today: Number(document.getElementById('energy_today').value),
+        last_interval_end_at: Number(document.getElementById('last_interval_end_at').value),
+        last_report_at: Number(document.getElementById('last_report_at').value),
+        modules: Number(document.getElementById('modules').value),
+        operational_at: Number(document.getElementById('operational_at').value),
+        size_w: Number(document.getElementById('size_w').value),
+        status: document.getElementById('status').value.trim(),
+        summary_date: document.getElementById('summary_date').value,
+        events: document.getElementById('events').value.trim() || null,
+        alarms: document.getElementById('alarms').value.trim() || null
+      };
 
       fetch(apiBase, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, full_name, email })
+        body: JSON.stringify(payload)
       })
       .then(async res => {
         const contentType = res.headers.get('content-type') || '';
-        let data;
-        if (contentType.includes('application/json')) {
-          data = await res.json();
-        } else {
-          data = await res.text();
-        }
+        let data = contentType.includes('application/json') ? await res.json() : await res.text();
 
         if (res.status >= 400) {
           responseMessage.textContent = `Error ${res.status}: ` + (typeof data === 'string' ? data : JSON.stringify(data));
           responseMessage.classList.add('error');
         } else {
-          responseMessage.textContent = `Success ${res.status}: enphase added.`;
+          responseMessage.textContent = `Success ${res.status}: Enphase added.`;
           responseMessage.classList.add('success');
           document.getElementById('enphaseForm').reset();
           load_enphase(currentPage);

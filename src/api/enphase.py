@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from framework.db import get_db
-from models.enphase import enphase, enphaseCreate
+from models.enphase import Enphase, EnphaseCreate
 from datetime import datetime, UTC
 
 router = APIRouter()
@@ -38,7 +38,7 @@ def list_enphase(
     """
     try:
         offset = (page - 1) * limit
-        enphase_records = db.query(enphase).offset(offset).limit(limit).all()
+        enphase_records = db.query(Enphase).offset(offset).limit(limit).all()
         return [serialize_sqlalchemy_obj(item) for item in enphase_records]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
@@ -46,7 +46,7 @@ def list_enphase(
 
 @router.post("/api/v1/enphase")
 def create_record(
-    enphase_data: enphaseCreate = Body(..., description="Data for the new record"),
+    enphase_data: EnphaseCreate = Body(..., description="Data for the new record"),
     db: Session = Depends(get_db)
 ):
     """
@@ -61,7 +61,7 @@ def create_record(
     """
     try:
         data = enphase_data.model_dump(exclude_unset=True)
-        new_record = enphase(**data)
+        new_record = Enphase(**data)
         new_record.create_date = datetime.now(UTC)
         new_record.update_date = datetime.now(UTC)
 
@@ -92,7 +92,7 @@ def get_enphase_by_id(id: int, db: Session = Depends(get_db)):
         HTTPException: If the record is not found.
     """
     try:
-        record = db.query(enphase).filter(enphase.id == id).first()
+        record = db.query(Enphase).filter(Enphase.id == id).first()
         if not record:
             raise HTTPException(status_code=404, detail=f"enphase with id {id} not found")
         return serialize_sqlalchemy_obj(record)
@@ -105,7 +105,7 @@ def get_enphase_by_id(id: int, db: Session = Depends(get_db)):
 @router.put("/api/v1/enphase/{id}")
 def update_enphase_full(
     id: int,
-    enphase_data: enphaseCreate = Body(..., description="Updated data for the record"),
+    enphase_data: EnphaseCreate = Body(..., description="Updated data for the record"),
     db: Session = Depends(get_db)
 ):
     """
@@ -123,7 +123,7 @@ def update_enphase_full(
         HTTPException: If the record is not found.
     """
     try:
-        record = db.query(enphase).filter(enphase.id == id).first()
+        record = db.query(Enphase).filter(Enphase.id == id).first()
         if not record:
             raise HTTPException(status_code=404, detail=f"enphase with id {id} not found")
 
@@ -145,7 +145,7 @@ def update_enphase_full(
 @router.patch("/api/v1/enphase/{id}")
 def update_enphase_partial(
     id: int,
-    enphase_data: enphaseCreate = Body(..., description="Partial updated data for the record"),
+    enphase_data: EnphaseCreate = Body(..., description="Partial updated data for the record"),
     db: Session = Depends(get_db)
 ):
     """
@@ -163,7 +163,7 @@ def update_enphase_partial(
         HTTPException: If the record is not found.
     """
     try:
-        record = db.query(enphase).filter(enphase.id == id).first()
+        record = db.query(Enphase).filter(Enphase.id == id).first()
         if not record:
             raise HTTPException(status_code=404, detail=f"enphase with id {id} not found")
 
@@ -185,7 +185,7 @@ def update_enphase_partial(
 @router.delete("/api/v1/enphase/{id}")
 def delete_enphase(id: int, db: Session = Depends(get_db)):
     """
-    Delete a enphase record by ID.
+    Delete an enphase record by ID.
 
     Args:
         id (int): The ID of the record to delete.
@@ -198,7 +198,7 @@ def delete_enphase(id: int, db: Session = Depends(get_db)):
         HTTPException: If the record is not found.
     """
     try:
-        record = db.query(enphase).filter(enphase.id == id).first()
+        record = db.query(Enphase).filter(Enphase.id == id).first()
         if not record:
             raise HTTPException(status_code=404, detail=f"enphase with id {id} not found")
 
