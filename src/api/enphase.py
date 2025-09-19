@@ -20,6 +20,46 @@ def serialize_sqlalchemy_obj(obj):
     return {column.name: getattr(obj, column.name) for column in obj.__table__.columns}
 
 
+@router.get("/api/v1/enphase/summary")
+def enphase_summary(
+    start_date: str = Query(
+        default=(datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d"),
+        description="Start date for summary filter in YYYY-MM-DD format"
+    ),
+    db: Session = Depends(get_db)
+):
+    """
+    Get count and max energy_today grouped by summary_date,
+    filtered by summary_date >= start_date.
+    """
+    try:
+        query = (
+            db.query(
+                Enphase.summary_date,
+                func.count().label("count"),
+                func.max(Enphase.energy_today).label("max_energy_today")
+            )
+            .filter(Enphase.summary_date >= start_date)
+            .group_by(Enphase.summary_date)
+            .order_by(Enphase.summary_date)
+        )
+
+        results = query.all()
+
+        # Serialize results to list of dicts
+        return [
+            {
+                "summary_date": r.summary_date,
+                "count": r.count,
+                "max_energy_today": r.max_energy_today
+            }
+            for r in results
+        ]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
 @router.get("/api/v1/enphase")
 def list_enphase(
     page: int = Query(1, ge=1, description="Page number to retrieve"),
@@ -210,44 +250,4 @@ def delete_enphase(id: int, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-
-@router.get("/api/v1/enphase/summary")
-def enphase_summary(
-    start_date: str = Query(
-        default=(datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d"),
-        description="Start date for summary filter in YYYY-MM-DD format"
-    ),
-    db: Session = Depends(get_db)
-):
-    """
-    Get count and max energy_today grouped by summary_date,
-    filtered by summary_date >= start_date.
-    """
-    try:
-        query = (
-            db.query(
-                Enphase.summary_date,
-                func.count().label("count"),
-                func.max(Enphase.energy_today).label("max_energy_today")
-            )
-            .filter(Enphase.summary_date >= start_date)
-            .group_by(Enphase.summary_date)
-            .order_by(Enphase.summary_date)
-        )
-
-        results = query.all()
-
-        # Serialize results to list of dicts
-        return [
-            {
-                "summary_date": r.summary_date,
-                "count": r.count,
-                "max_energy_today": r.max_energy_today
-            }
-            for r in results
-        ]
-
-    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
